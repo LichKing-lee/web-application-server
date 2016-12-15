@@ -7,7 +7,7 @@ import java.util.List;
  */
 public class GetRequestParser implements RequestParser {
     @Override
-    public String getUri(List<String> lines){
+    public String getData(List<String> lines){
         return lines.get(0).split(" ")[1];
     }
 }

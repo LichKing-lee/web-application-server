@@ -3,12 +3,15 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.List;
+import java.util.*;
 
+import db.DataBase;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import service.FormService;
 import service.UserService;
+import util.HttpRequestUtils;
 import util.IOUtils;
 import web.RequestParser;
 import web.GetRequestParser;
@@ -32,19 +35,48 @@ public class RequestHandler extends Thread {
                 connection.getPort());
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            List<String> lines = IOUtils.makeList(new BufferedReader(new InputStreamReader(in)));
-            log.debug("lines :: {}", lines);
-
-            if(lines.isEmpty()){
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            String line = reader.readLine();
+            if(line == null){
                 return;
             }
 
-            String uri = getUri(lines);
+            String uri = getUri(line);
             log.debug("resource :: {}", uri);
 
             if(!formService.isStaticUri(uri)){
-                userService.saveUser(lines);
-                uri = DEFAULT_INDEX;
+                Map<String, String> map;
+                if(isGet(line)) {
+                    map = HttpRequestUtils.parseQueryString(line.split("\\?")[1]);
+                }else{
+                    String sss;
+                    int length = 0;
+                    while(!"".equals(sss = reader.readLine())){
+                        if(sss == null){
+                            return;
+                        }
+
+                        if(sss.contains("Content-Length")){
+                            length = Integer.parseInt(sss.split(" ")[1]);
+                        }
+                    }
+                    String str = IOUtils.readData(reader, length);
+                    log.debug("postData :: {}", str);
+                    map = HttpRequestUtils.parseQueryString(str);
+                }
+                User user = new User(map);
+                log.debug("user :: {}", user);
+                DataBase.addUser(user);
+
+                try {
+                    DataOutputStream dos = new DataOutputStream(out);
+                    dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+                    dos.writeBytes("Location: http://localhost:9090/index.html\r\n");
+                    dos.writeBytes("\r\n");
+                } catch (IOException e) {
+                    log.error(e.getMessage());
+                }
+                return;
             }
 
             byte[] body = Files.readAllBytes(new File("./web-application-server/webapp" + uri).toPath());
@@ -56,6 +88,10 @@ public class RequestHandler extends Thread {
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+    }
+
+    private boolean isGet(String line) {
+        return line.contains("GET");
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
@@ -78,11 +114,7 @@ public class RequestHandler extends Thread {
         }
     }
 
-    private String getUri(List<String> lines){
-        return lines.get(0).split(" ")[1];
-    }
-
-    private RequestParser parserFactory(){
-        return new GetRequestParser();
+    private String getUri(String line){
+        return line.split(" ")[1];
     }
 }
