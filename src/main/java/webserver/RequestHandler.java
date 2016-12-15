@@ -3,25 +3,28 @@ package webserver;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
 
-import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import util.HttpRequestUtils;
+import service.FormService;
+import service.UserService;
+import util.IOUtils;
+import web.RequestParser;
+import web.GetRequestParser;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
-    private static final String STATIC_RESOURCE = "([^\\s]+(\\.(?i)(html|js|css))$)";
     private static final String DEFAULT_INDEX = "/index.html";
 
     private Socket connection;
+    private FormService formService;
+    private UserService userService;
 
     public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
+        this.formService = new FormService();
+        this.userService = new UserService();
     }
 
     public void run() {
@@ -29,30 +32,22 @@ public class RequestHandler extends Thread {
                 connection.getPort());
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
-
-            String line;
-            List<String> lines = new ArrayList<>();
-            while(!"".equals(line = br.readLine())){
-                if(line == null){
-                    return;
-                }
-                lines.add(line);
-            }
-
+            List<String> lines = IOUtils.makeList(new BufferedReader(new InputStreamReader(in)));
             log.debug("lines :: {}", lines);
-            String requestResource = lines.get(0).split(" ")[1];
-            log.debug("resource :: {}", requestResource);
 
-            if(!Pattern.matches(STATIC_RESOURCE, requestResource)){
-                Map<String, String> map = HttpRequestUtils.parseQueryString(requestResource.split("\\?")[1]);
-
-                User user = new User(map);
-                log.debug("user :: {}", user);
-                requestResource = DEFAULT_INDEX;
+            if(lines.isEmpty()){
+                return;
             }
 
-            byte[] body = Files.readAllBytes(new File("./web-application-server/webapp" + requestResource).toPath());
+            String uri = getUri(lines);
+            log.debug("resource :: {}", uri);
+
+            if(!formService.isStaticUri(uri)){
+                userService.saveUser(lines);
+                uri = DEFAULT_INDEX;
+            }
+
+            byte[] body = Files.readAllBytes(new File("./web-application-server/webapp" + uri).toPath());
 
             // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
             DataOutputStream dos = new DataOutputStream(out);
@@ -81,5 +76,13 @@ public class RequestHandler extends Thread {
         } catch (IOException e) {
             log.error(e.getMessage());
         }
+    }
+
+    private String getUri(List<String> lines){
+        return lines.get(0).split(" ")[1];
+    }
+
+    private RequestParser parserFactory(){
+        return new GetRequestParser();
     }
 }
