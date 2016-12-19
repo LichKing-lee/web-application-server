@@ -26,8 +26,4 @@ public class ResponseHeader {
 	public void put(String key, Object value) {
 		this.headerMap.put(key, value);
 	}
-
-	public Set<Map.Entry<String, Object>> entries() {
-		return this.headerMap.entrySet();
-	}
 }

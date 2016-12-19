@@ -16,10 +16,10 @@ public enum ResponseCode implements HeaderMakeable {
 		@Override
 		public String getHeader(Response response) {
 			try {
-				//response.body = Files.readAllBytes(new File(response.resource).toPath());
-				response.setBody(Files.readAllBytes(new File("D:/workspace/web-application-server/webapp" + response.getResource()).toPath()));
+				response.setBody(Files.readAllBytes(new File("./web-application-server/webapp" + response.getResource()).toPath()));
+				//response.setBody(Files.readAllBytes(new File("D:/workspace/web-application-server/webapp" + response.getResource()).toPath()));
 			} catch (IOException e) {
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException("resource :: " + response.getResource());
 			}
 
 			StringBuilder builder = new StringBuilder();
@@ -56,8 +56,8 @@ public enum ResponseCode implements HeaderMakeable {
 	};
 
 	private static final String HTTP_VERSION = "HTTP/1.1";
-	//private static final String LOCAL_LOCATION = "Location: http://localhost:9090";
-	private static final String LOCAL_LOCATION = "Location: http://localhost:8080";
+	private static final String LOCAL_LOCATION = "Location: http://localhost:9090";
+	//private static final String LOCAL_LOCATION = "Location: http://localhost:8080";
 	private final Integer code;
 
 	ResponseCode(Integer code) {

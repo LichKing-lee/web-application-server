@@ -8,6 +8,9 @@ import model.User;
 import webserver.Request;
 import webserver.Response;
 
+import java.util.Collection;
+import java.util.List;
+
 /**
  * Created by LichKing on 2016. 12. 15..
  */
@@ -39,6 +42,14 @@ public class UserController {
 	public void list(Request request, Response response) {
 		if (!"true".equals(request.getCookie("logined"))) {
 			response.setRedirectPage("/user/login.html");
+			return;
 		}
+
+		Collection<User> users = DataBase.findAll();
+
+		StringBuilder builder = new StringBuilder();
+
+		response.setRedirectPage("/user/list.html");
+
 	}
 }

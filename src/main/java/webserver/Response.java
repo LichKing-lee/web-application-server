@@ -20,8 +20,8 @@ public class Response {
 	private String redirectPage;
 
 	private static final String HTTP_VERSION = "HTTP/1.1";
-	//private static final String LOCAL_LOCATION = "Location: http://localhost:9090";
-	private static final String LOCAL_LOCATION = "Location: http://localhost:8080";
+	private static final String LOCAL_LOCATION = "Location: http://localhost:9090";
+	//private static final String LOCAL_LOCATION = "Location: http://localhost:8080";
 	private static final String DEFAULT_PATH = "./web-application-server/webapp";
 	private static final String INDEX_PAGE = "/index.html";
 
@@ -49,8 +49,8 @@ public class Response {
 		response.resource = resource;
 
 		try {
-			//response.body = Files.readAllBytes(new File(response.resource).toPath());
-			response.body = Files.readAllBytes(new File("D:/workspace/web-application-server/webapp" + resource).toPath());
+			response.body = Files.readAllBytes(new File(response.resource).toPath());
+			//response.body = Files.readAllBytes(new File("D:/workspace/web-application-server/webapp" + resource).toPath());
 		} catch (IOException e) {
 			throw new IllegalArgumentException(resource);
 		}

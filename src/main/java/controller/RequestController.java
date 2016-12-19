@@ -15,7 +15,7 @@ import webserver.Response;
 public class RequestController {
 	private Logger log = LoggerFactory.getLogger(RequestController.class);
 	private UserController userController;
-	private static final String STATIC_RESOURCE = "([^\\s]+(\\.(?i)(html|js|css|ico))$)";
+	private static final String STATIC_RESOURCE = "([^\\s]+(\\.(?i)(html|js|css|ico|woff|ttf))$)";
 
 	public RequestController() {
 		this.userController = new UserController();
@@ -25,7 +25,7 @@ public class RequestController {
 		String requestUri = request.getRequestUri();
 
 		if (isStaticUri(requestUri)) {
-			return Response.create200(ResponseCode.OK, requestUri);
+		    return new Response(ResponseCode.OK, requestUri);
 		}
 
 		return forward(request);
@@ -44,7 +44,6 @@ public class RequestController {
 				return response;
 
 			case "/user/login":
-				//response = Response.create200(ResponseCode.OK);
 				response = new Response(ResponseCode.OK);
 				this.userController.login(request, response);
 				return response;
@@ -54,8 +53,7 @@ public class RequestController {
 				this.userController.list(request, response);
 				return response;
 			default:
-				log.error("null resource :: {}", request.getRequestUri());
-				return null;
+				throw new IllegalArgumentException("null resource :: " + request.getRequestUri());
 		}
 	}
 }
