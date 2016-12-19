@@ -15,6 +15,7 @@ public class RequestController {
     private Logger log = LoggerFactory.getLogger(RequestController.class);
     private UserController userController;
     private static final String INDEX_PAGE = "/index.html";
+    private static final String LOGIN_FAIL_PAGE = "/user/login_failed.html";
     private static final String STATIC_RESOURCE = "([^\\s]+(\\.(?i)(html|js|css))$)";
 
     public RequestController(){
@@ -23,22 +24,30 @@ public class RequestController {
 
     public Response handle(Request request){
         String requestUri = request.getRequestUri();
-        Response response = null;
 
         if(isStaticUri(requestUri)){
             return Response.create200(ResponseCode.OK, requestUri);
         }
 
-        if("/user/create".equals(requestUri)){
-            this.userController.saveUser(request);
-            requestUri = INDEX_PAGE;
-            response = Response.create300(ResponseCode.FOUND, requestUri);
-        }
-
-        return response;
+        return forward(request);
     }
 
     private boolean isStaticUri(String uri){
         return Pattern.matches(STATIC_RESOURCE, uri);
+    }
+
+    private Response forward(Request request){
+        switch (request.getRequestUri()){
+            case "/user/create" :
+                this.userController.saveUser(request);
+                return Response.create300(ResponseCode.FOUND, INDEX_PAGE);
+
+            case "/user/login" :
+                boolean isLogin = this.userController.login(request);
+                return Response.create300AndCookie(ResponseCode.FOUND, isLogin ? INDEX_PAGE : LOGIN_FAIL_PAGE);
+
+            default:
+                return null;
+        }
     }
 }

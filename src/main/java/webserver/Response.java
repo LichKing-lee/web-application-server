@@ -13,15 +13,30 @@ public class Response {
     private String header;
     private String resource;
     private byte[] body;
-    private ResponseCode responseCode;
 
     private static final String HTTP_VERSION = "HTTP/1.1";
     private static final String LOCAL_LOCATION = "Location: http://localhost:9090";
     private static final String DEFAULT_PATH = "./web-application-server/webapp";
 
+    public static Response create300AndCookie(ResponseCode responseCode, String resource){
+        Response response = new Response();
+        response.resource = DEFAULT_PATH + resource;
+        response.body = new byte[0];
+
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(HTTP_VERSION).append(" ").append(responseCode.getMessage()).append("\r\n");
+        builder.append(LOCAL_LOCATION).append(resource).append("\r\n");
+        builder.append("Set-Cookie: logined=true").append("\r\n");
+        builder.append("\r\n");
+
+        response.header = builder.toString();
+
+        return response;
+    }
+
     public static Response create300(ResponseCode responseCode, String resource){
         Response response = new Response();
-        response.responseCode = responseCode;
         response.resource = DEFAULT_PATH + resource;
         response.body = new byte[0];
 
@@ -38,7 +53,6 @@ public class Response {
 
     public static Response create200(ResponseCode responseCode, String resource){
         Response response = new Response();
-        response.responseCode = responseCode;
         response.resource = DEFAULT_PATH + resource;
 
         try {

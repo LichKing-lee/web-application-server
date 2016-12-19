@@ -17,4 +17,11 @@ public class UserController {
         log.debug("user :: {}", user);
         DataBase.addUser(user);
     }
+
+    public boolean login(Request request){
+        User user = DataBase.findUserById(request.getParameter("userId"));
+        log.debug("user :: {}", user);
+
+        return user != null && user.isMatchPassword(request.getParameter("password"));
+    }
 }
