@@ -77,4 +77,9 @@ public class ParseTest {
         //then
         assertTrue(Pattern.matches(pattern, "abc.html"));
     }
+
+    @Test
+    public void 정규식_테스트2(){
+        String pattern = "GET|POST|PUT|DELETE";
+    }
 }
